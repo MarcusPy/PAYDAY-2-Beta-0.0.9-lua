@@ -1,0 +1,267 @@
+ContractBoxGui = ContractBoxGui or class(  )
+
+function ContractBoxGui:init( ws, fullscreen_ws ) -- title, text, content_data, config )
+--[[
+	config = config or {}
+	config.h = config.h or 145
+	config.w = config.w or 340
+	local x,y = ws:size()
+	config.x = config.x or 0  -- x - config.w 
+	config.y = config.y or (y - config.h - CoreMenuRenderer.Renderer.border_height)
+	-- config.y = config.y or 64
+	config.no_close_legend = true
+	config.no_scroll_legend = true
+	config.use_minimize_legend = false
+	title = "Contract"
+	-- self._default_font_size = tweak_data.menu.default_font_size
+	-- self._topic_state_font_size = 22
+	
+	local has_job = managers.job:current_job_data() and true or false
+	if has_job then
+		title = managers.localization:text( managers.job:current_job_data().briefing_id )
+	else
+		local level_id = Global.game_settings.level_id
+		self._level_data = tweak_data.levels[ level_id ]
+		title = managers.localization:text( self._level_data.briefing_id )
+	end
+			
+	ContractBoxGui.super.init( self, ws, title, text, content_data, config )
+		
+	self:set_layer( 10 )
+	self:set_size( config.w, config.h )
+	self:set_visible( has_job ) 
+	]]
+	
+	self._ws = ws
+	self._fullscreen_ws = fullscreen_ws
+	self._panel = self._ws:panel():panel()
+	self._fullscreen_panel = self._fullscreen_ws:panel():panel()
+	
+	
+	self._panel:text( { name="crewpage_text", text=utf8.to_upper( managers.localization:text("menu_crewpage") ), align="left", vertical="top", h=tweak_data.menu.pd2_screens_title_font_size ,font_size=tweak_data.menu.pd2_screens_title_font_size, font=tweak_data.menu.pd2_screens_title_font, color=tweak_data.screen_color_white } )
+
+	local bg_text = self._fullscreen_panel:text( { name="crewpage_text", text=utf8.to_upper( managers.localization:text("menu_crewpage") ), h=90, align="left", vertical="top", font_size=tweak_data.menu.pd2_screens_bg_font_size, font=tweak_data.menu.pd2_screens_bg_font, color=tweak_data.screen_color_blue:with_alpha(0.3), layer=1 } )
+	local x, y = managers.gui_data:safe_to_full_16_9( self._panel:child("crewpage_text"):world_x(), self._panel:child("crewpage_text"):world_center_y() )
+	bg_text:set_world_left( x )
+	bg_text:set_world_center_y( y )
+	bg_text:move( -13, 9 )
+	
+	MenuBackdropGUI.animate_bg_text( self, bg_text )
+	
+	local contract_data = managers.job:current_contact_data()
+	local job_data = managers.job:current_job_data()
+	if( contract_data ) then
+		self._contract_panel = self._panel:panel( { w=420, h=128+10 } )
+		self._contract_panel:set_leftbottom( 10, self._panel:h() - 50 )
+		
+		
+		self._contract_panel:rect( { color=Color(0.5, 0, 0, 0), layer=-1 } )
+		self._contract_panel:polyline( { color=tweak_data.screen_color_blue:with_alpha(0.5), blend_mode="add", line_width=1, closed=true, points={ Vector3( 0, 0, 0 ), Vector3( self._contract_panel:w(), 0, 0 ), Vector3( self._contract_panel:w(), self._contract_panel:h(), 0 ), Vector3( 0, self._contract_panel:h(), 0 ) } } )
+		
+		
+		self._contact_text_header = self._panel:text( { text=utf8.to_upper( managers.localization:text( "cn_menu_contract_header" ) .. " " .. managers.localization:text( job_data.name_id ) ), align="left", vertical="top", h=tweak_data.menu.pd2_screens_text_font_size ,font_size=tweak_data.menu.pd2_screens_text_font_size, font=tweak_data.menu.pd2_screens_text_font, color=tweak_data.screen_color_blue:with_alpha(1), blend_mode="add" } )
+		self._contact_text_header:set_bottom( self._contract_panel:top() )
+		self._contact_text_header:set_left( self._contract_panel:left() )
+		
+		self._contact_image = self._contract_panel:bitmap( { name = "contact_image", texture=managers.job:current_contact_data().image, w = 100, h = 128, x=5, y=5, texture_rect={0,0,100,128}, layer=1 } )
+		
+			
+		self._contact_text_header	= self._contract_panel:text( { text=utf8.to_upper( managers.localization:text( "cn_menu_contact_header" ) ), align="right", vertical="top", h=tweak_data.menu.pd2_screens_text_font_size ,font_size=tweak_data.menu.pd2_screens_text_font_size, font=tweak_data.menu.pd2_screens_text_font, color=tweak_data.screen_color_blue } )
+		self._length_text_header	= self._contract_panel:text( { text=utf8.to_upper( managers.localization:text( "cn_menu_contract_length_header" ) ), align="right", vertical="top", h=tweak_data.menu.pd2_screens_text_font_size ,font_size=tweak_data.menu.pd2_screens_text_font_size, font=tweak_data.menu.pd2_screens_text_font, color=tweak_data.screen_color_blue } )
+		self._paygrade_text_header	= self._contract_panel:text( { text=utf8.to_upper( managers.localization:text( "cn_menu_contract_paygrade_header" ) ), align="right", vertical="top", h=tweak_data.menu.pd2_screens_text_font_size ,font_size=tweak_data.menu.pd2_screens_text_font_size, font=tweak_data.menu.pd2_screens_text_font, color=tweak_data.screen_color_blue } )
+		self._payout_text_header	= self._contract_panel:text( { text=utf8.to_upper( managers.localization:text( "cn_menu_contract_payout_header" ) ), align="right", vertical="top", h=tweak_data.menu.pd2_screens_text_font_size ,font_size=tweak_data.menu.pd2_screens_text_font_size, font=tweak_data.menu.pd2_screens_text_font, color=tweak_data.screen_color_blue } )
+		
+		local w = 0
+		do
+			local _, _, tw, _ = self._contact_text_header:text_rect()
+			w = math.max( w, tw )
+		end
+		do
+			local _, _, tw, _ = self._length_text_header:text_rect()
+			w = math.max( w, tw )
+		end
+		do
+			local _, _, tw, _ = self._paygrade_text_header:text_rect()
+			w = math.max( w, tw )
+		end
+		do
+			local _, _, tw, _ = self._payout_text_header:text_rect()
+			w = math.max( w, tw )
+		end
+		self._contact_text_header:set_w( w )
+		self._length_text_header:set_w( w )
+		self._paygrade_text_header:set_w( w )
+		self._payout_text_header:set_w( w )
+
+		self._contact_text_header:set_left( self._contact_image:right() + 5 )
+		self._length_text_header:set_left( self._contact_image:right() + 5 )
+		self._paygrade_text_header:set_left( self._contact_image:right() + 5 )
+		self._payout_text_header:set_left( self._contact_image:right() + 5 )
+		
+		self._contact_text_header:set_top( self._contact_image:top() )
+		self._length_text_header:set_top( self._contact_text_header:bottom() )
+		self._paygrade_text_header:set_top( self._length_text_header:bottom() )
+		self._payout_text_header:set_top( self._paygrade_text_header:bottom() )
+		
+		
+		self._contact_text = self._contract_panel:text( { text=managers.localization:text( contract_data.name_id ), align="left", vertical="top", font_size=tweak_data.menu.pd2_screens_text_font_size * 1.1, font=tweak_data.menu.pd2_screens_text_font, color=tweak_data.screen_color_white } )
+		self._contact_text:set_position( self._contact_text_header:right() + 3, self._contact_text_header:top() )
+		
+		
+		self._length_text = self._contract_panel:text( { text=managers.localization:text( "cn_menu_contract_length", {stages=#job_data.chain} ), align="left", vertical="top", font_size=tweak_data.menu.pd2_screens_text_font_size * 1.1, font=tweak_data.menu.pd2_screens_text_font, color=tweak_data.screen_color_white } )
+		self._length_text:set_position( self._length_text_header:right() + 3, self._length_text_header:top() )
+		
+		
+		local stars_panel = self._contract_panel:panel( {} )
+		local num_stars = 0
+		local x = 0
+		local star_size = 21
+		local difficulty = Global.game_settings.difficulty or "easy"
+		local difficulty_id = math.max( 0, ( tweak_data:difficulty_to_index( difficulty ) or 0 ) - 2 )
+		 
+		for i = 1, math.ceil( job_data.jc/10 ) do
+			stars_panel:bitmap( { texture="guis/textures/pd2/crimenet_star", x=x, w=star_size, h=star_size, blend_mode="add", color=tweak_data.screen_color_white } )
+			x = x + star_size * 0.72
+			num_stars = num_stars + 1
+		end
+		for i = 1, difficulty_id do
+			stars_panel:bitmap( { texture="guis/textures/pd2/crimenet_star", x=x, w=star_size, h=star_size, blend_mode="add", color=tweak_data.screen_color_red } )
+			x = x + star_size * 0.72
+			num_stars = num_stars + 1
+		end
+		stars_panel:set_position( self._paygrade_text_header:right() + 3, self._paygrade_text_header:top() )
+		
+		
+		self._payout_text = self._contract_panel:text( { text="$2,125,000.00", align="left", vertical="top", font_size=tweak_data.menu.pd2_screens_text_font_size * 1.1, font=tweak_data.menu.pd2_screens_text_font, color=tweak_data.screen_color_white } )
+		self._payout_text:set_position( self._payout_text_header:right() + 3, self._payout_text_header:top() )
+		
+	end
+	
+-- contact_image = contact_image or self._panel:child( "lower_static_panel" ):bitmap( { name = "contact_image", texture = managers.job:current_contact_data().image, w = 100, h = 128, texture_rect={0,0,120,128} } )
+		
+	-- managers.menu:active_menu().renderer.ws:hide()
+	
+end
+
+function ContractBoxGui:refresh()
+	local text = managers.localization:text( managers.job:current_job_data().briefing_id )
+	self:set_text( text, true )
+	
+	local contact_image = self._panel:child( "lower_static_panel" ):child( "contact_image" )
+	contact_image = contact_image or self._panel:child( "lower_static_panel" ):bitmap( { name = "contact_image", texture = managers.job:current_contact_data().image, w = 100, h = 128, texture_rect={0,0,120,128} } )
+	if contact_image then
+		contact_image:set_image( managers.job:current_contact_data().image )
+	end
+	self:set_visible( true )
+end
+
+function ContractBoxGui:update( t, dt )
+
+end
+
+function ContractBoxGui:_create_text_box( ws, title, text, content_data, config )
+	-- ContractBoxGui.super._create_text_box( self, ws, title, text, content_data, config )
+		
+	-- local profile_panel = self._scroll_panel:panel( { name = "profile_panel", x = 0, h = 600, w = self._scroll_panel:w(), layer = 1 } )
+			
+	-- self._scroll_panel:set_h( math.max( self._scroll_panel:h(), profile_panel:h() ) )
+	-- self:_set_scroll_indicator()
+end
+
+function ContractBoxGui:_create_lower_static_panel( lower_static_panel )
+	--[[self._input_panel = lower_static_panel:panel( { name = "input_panel", x = 0, h = 24, w = self._panel:w(), layer = 1 } )
+	
+	
+	
+	self._input_panel:rect( { name = "focus_indicator", visible = false, color = Color.white:with_alpha( 0.2 ), layer = 0 } )
+	lower_static_panel:set_h( self._input_panel:h() )
+		
+	local say = self._input_panel:text( { name = "say", text = string.upper( managers.localization:text( "debug_chat_say" ) ), font = tweak_data.menu.small_font, font_size = tweak_data.menu.small_font_size, x = 0, y = 0,
+									align="left", halign="left", vertical="center", hvertical="center", blend_mode="normal",
+									color = Color.white, layer = 1 } )
+	local _,_,w,h = say:text_rect()
+	say:set_size( w, self._input_panel:h() )
+	
+	local input_text = self._input_panel:text( { name = "input_text", text = "", font = tweak_data.menu.small_font_noshadow, font_size = tweak_data.menu.small_font_size, x = 0, y = 0,
+									align="left", halign="left", vertical="center", hvertical="center", blend_mode="normal",
+									color = Color.white, layer = 1, wrap = true, word_wrap = false } )
+	local caret = self._input_panel:rect( { name="caret", layer = 2, x = 0, y = 0, w = 0, h = 0, color = Color(0.05, 1, 1, 1) } )]]
+	
+	-- self._panel:w() * (720/1280)
+	
+	-- lower_static_panel:set_h( self._panel:w() * (720/1280) )
+	-- lower_static_panel:video( { video = self._level_data.movie, loop = true } )
+	--[[
+	lower_static_panel:set_h( self._panel:w() / 2 )
+	if managers.job:has_active_job() then
+		lower_static_panel:bitmap( { name = "contact_image", texture = managers.job:current_contact_data().image, w = 100, h = 128, texture_rect={0,0,120,128} } )
+	end
+	]]
+end
+
+function ContractBoxGui:mouse_pressed( button, x, y )
+	if not self:can_take_input() then
+		return
+	end
+	
+	if button == Idstring( "0" ) then
+		if self._panel:child( "info_area" ):inside( x, y ) then
+			-- local profile_panel = self._scroll_panel:child( "profile_panel" )
+			
+		end
+	end
+	
+end
+
+function ContractBoxGui:mouse_moved( x, y )
+	if not self:can_take_input() then
+		return
+	end
+	
+	local pointer = nil
+	local inside_info = self._panel:child( "info_area" ):inside( x, y )
+	
+	-- local profile_panel = self._scroll_panel:child( "profile_panel" )
+		
+	return false, pointer
+end
+
+function ContractBoxGui:can_take_input()
+	return false
+end
+
+function ContractBoxGui:moved_scroll_bar()
+end
+
+function ContractBoxGui:check_minimize()
+	return false
+end
+
+function ContractBoxGui:check_grab_scroll_bar()
+	return false
+end
+
+function ContractBoxGui:release_scroll_bar()
+	return false
+end
+
+function ContractBoxGui:set_enabled()
+	self._panel:hide()
+	self._fullscreen_panel:hide()
+end
+
+function ContractBoxGui:set_size( x, y )
+	-- ContractBoxGui.super.set_size( self, x, y )
+	-- local profile_panel = self._scroll_panel:child( "profile_panel" )
+end
+
+function ContractBoxGui:set_visible( visible )
+	-- ContractBoxGui.super.set_visible( self, visible )
+end
+
+function ContractBoxGui:close()
+	-- managers.menu:active_menu().renderer.ws:show()
+	self._ws:panel():remove( self._panel )
+	self._fullscreen_ws:panel():remove( self._fullscreen_panel )
+end
+

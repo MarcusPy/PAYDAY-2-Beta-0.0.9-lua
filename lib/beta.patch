@@ -1,0 +1,44 @@
+Index: managers/ExperienceManager.lua
+===================================================================
+--- managers/ExperienceManager.lua	(revision 39912)
++++ managers/ExperienceManager.lua	(working copy)
+@@ -359,7 +359,7 @@
+ ---------------------------------------------------------------------
+ 
+ function ExperienceManager:level_cap()
+-	return 100
++	return 25
+ end
+ 
+ function ExperienceManager:reached_level_cap()
+Index: tweak_data/NarrativeTweakData.lua
+===================================================================
+--- tweak_data/NarrativeTweakData.lua	(revision 39913)
++++ tweak_data/NarrativeTweakData.lua	(working copy)
+@@ -462,24 +462,14 @@
+ 	self.jobs.escape_chain_test_prof.jc = 50
+ 	self.jobs.escape_chain_test_prof.professional = true
+ 	
+-	self._jobs_index = { "welcome_to_the_jungle_prof",
+-						 "framing_frame",
+-						 "framing_frame_prof",
++	self._jobs_index = { 
+ 						 "watchdogs",
+-						 "watchdogs_prof",
+ 						 "alex",
+-						 "alex_prof",
+-						 "firestarter",
+-						 "firestarter_prof",
+-						 "ukrainian_job_prof",
+ 						 "jewelry_store",
+ 						 "four_stores",
+-						 "nightclub",
+-						 "mallcrasher",
+ 						 "branchbank_deposit",
+ 						 "branchbank_cash",
+-						 "branchbank_gold_prof",
+-						 "branchbank_prof"}
++						 }
+ 	end
+ 	
+ --[[
